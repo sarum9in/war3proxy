@@ -3,6 +3,7 @@ package main
 import (
     "flag"
     "fmt"
+    "./proxy"
 )
 
 var host string
@@ -16,4 +17,5 @@ func init() {
 func main() {
     flag.Parse()
     fmt.Printf("Attempt to connect to %s:%d\n", host, port)
+    proxy.Listen(host, port)
 }
