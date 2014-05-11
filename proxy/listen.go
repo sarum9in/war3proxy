@@ -4,39 +4,40 @@ import (
     "net"
 )
 
-func handle(local *net.TCPConn, host *net.TCPAddr) {
-    defer local.Close()
-
-    remote, err := net.DialTCP("tcp", nil, host)
+func browse(local *net.UDPAddr,
+            remoteListen *net.UDPAddr,
+            remote *net.UDPAddr,
+            clientVersion ClientVersion) {
+    localConn, err := net.DialUDP("udp", nil, local)
     if err != nil {
         panic(err)
     }
-    defer remote.Close()
+    defer localConn.Close()
 
-    Proxy(local, remote)
+    remoteConn, err := net.ListenUDP("udp", remoteListen)
+    if err != nil {
+        panic(err)
+    }
+    defer remoteConn.Close()
+
+    Browse(localConn, remoteConn, remote, clientVersion)
 }
 
-func Listen(host string, port uint) {
-    host_addr, err := net.ResolveTCPAddr("tcp", host + string(port))
+func Listen(remote string, clientVersion ClientVersion) {
+    remote_udp_addr, err := net.ResolveUDPAddr("udp", remote)
     if err != nil {
         panic(err)
     }
 
-    local_addr, err := net.ResolveTCPAddr("tcp", "localhost:6112")
-    if err != nil {
-        panic(err)
+    remote_listen_udp_addr := &net.UDPAddr{
+        IP: net.IPv4(0, 0, 0, 0),
+        Port: 6112,
     }
 
-    listener, err := net.ListenTCP("tcp", local_addr)
-    if err != nil {
-        panic(err)
+    local_udp_addr := &net.UDPAddr{
+        IP: net.IPv4(255, 255, 255, 255),
+        Port: 6112,
     }
 
-    for {
-        conn, err := listener.AcceptTCP()
-        if err != nil {
-            panic(err)
-        }
-        go handle(conn, host_addr)
-    }
+    browse(local_udp_addr, remote_listen_udp_addr, remote_udp_addr, clientVersion)
 }
