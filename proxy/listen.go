@@ -2,12 +2,13 @@ package proxy
 
 import (
     "net"
+    "../warcraft"
 )
 
 func browse(local *net.UDPAddr,
             remoteListen *net.UDPAddr,
             remote *net.UDPAddr,
-            clientVersion ClientVersion) {
+            clientVersion warcraft.ClientVersion) {
     localConn, err := net.DialUDP("udp", nil, local)
     if err != nil {
         panic(err)
@@ -23,7 +24,7 @@ func browse(local *net.UDPAddr,
     Browse(localConn, remoteConn, remote, clientVersion)
 }
 
-func Listen(remote string, clientVersion ClientVersion) {
+func Listen(remote string, clientVersion warcraft.ClientVersion) {
     remote_udp_addr, err := net.ResolveUDPAddr("udp", remote)
     if err != nil {
         panic(err)

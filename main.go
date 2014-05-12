@@ -5,11 +5,12 @@ import (
     "fmt"
     "log"
     "./proxy"
+    "./warcraft"
 )
 
 var host string
 var port uint
-var client proxy.ClientVersion
+var client warcraft.ClientVersion
 var tft bool
 var version uint
 
@@ -23,11 +24,11 @@ func init() {
 func main() {
     flag.Parse()
     if tft {
-    	client.Expansion = proxy.TftExpansion
+        client.Expansion = warcraft.TftExpansion
     } else {
-    	client.Expansion = proxy.RawExpansion
+        client.Expansion = warcraft.RawExpansion
     }
-    client.Version = byte(version)
+    client.Version = uint32(version)
     addr := fmt.Sprintf("%s:%d", host, port)
     log.Println("Proxying to", addr)
     proxy.Listen(addr, client)

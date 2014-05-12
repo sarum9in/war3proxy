@@ -1,4 +1,4 @@
-package proxy
+package warcraft
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 )
 
 type GameInfo struct {
-	Id int32
+	Id uint32
 	Name string
 	Map string
 	Slots uint32

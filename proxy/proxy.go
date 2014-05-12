@@ -5,30 +5,22 @@ import (
     "log"
     "net"
     "time"
+    "../warcraft"
 )
 
-func SendBrowse(conn *net.UDPConn, remote *net.UDPAddr, clientVersion ClientVersion) {
-    data := []byte {
-        0xf7, 0x2f, 0x10, 0x00,
-        clientVersion.Expansion[0],
-        clientVersion.Expansion[1],
-        clientVersion.Expansion[2],
-        clientVersion.Expansion[3],
-        clientVersion.Version,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    }
-
+func SendBrowse(conn *net.UDPConn, remote *net.UDPAddr, clientVersion warcraft.ClientVersion) {
+    browse := warcraft.NewBrowse(clientVersion)
     log.Println("Sending browse for client version:", clientVersion)
-    _, err := conn.WriteTo(data, remote)
+    _, err := conn.WriteTo(browse.Bytes(), remote)
     if err != nil {
         log.Println("Unable to send browse:", err)
     }
 }
 
-func SendCancel(conn *net.UDPConn, game *GameInfo) {
-    // FIXME int32 like a byte
+func SendCancel(conn *net.UDPConn, game *warcraft.GameInfo) {
     data := []byte {
-        0xf7, 0x33, 0x08, 0x00, byte(game.Id), 0x00, 0x00, 0x00,
+        0xf7, 0x33, 0x08, 0x00,
+        byte(game.Id), 0x00, 0x00, 0x00,
     }
 
     log.Println("Sending cancel for game:", game.Name)
@@ -38,17 +30,14 @@ func SendCancel(conn *net.UDPConn, game *GameInfo) {
     }
 }
 
-func SendAnnounce(conn *net.UDPConn, game *GameInfo) {
+func SendAnnounce(conn *net.UDPConn, game *warcraft.GameInfo) {
     // FIXME int32 like a byte
     players := game.Slots - game.PlayerSlots + game.CurrentPlayers
     data := []byte {
         0xf7, 0x32, 0x10, 0x00,
-        byte(game.Id),
-        0x00, 0x00, 0x00,
-        byte(players),
-        0, 0, 0,
-        byte(game.Slots),
-        0, 0, 0,
+        byte(game.Id), 0x00, 0x00, 0x00,
+        byte(players), 0x00, 0x00, 0x00,
+        byte(game.Slots), 0x00, 0x00, 0x00,
     }
 
     log.Println("Sending announce for game:", game.Name)
@@ -58,10 +47,10 @@ func SendAnnounce(conn *net.UDPConn, game *GameInfo) {
     }
 }
 
-func Browse(local *net.UDPConn, remoteConn *net.UDPConn, remote *net.UDPAddr, clientVersion ClientVersion) {
-    var game *GameInfo = nil
+func Browse(local *net.UDPConn, remoteConn *net.UDPConn, remote *net.UDPAddr, clientVersion warcraft.ClientVersion) {
+    var game *warcraft.GameInfo = nil
     timepoint := time.Now()
-    updateGameInfo := func(g *GameInfo) {
+    updateGameInfo := func(g *warcraft.GameInfo) {
         if g == nil {
             if game != nil {
                 if time.Now().After(timepoint.Add(3 * time.Second)) {
@@ -109,7 +98,7 @@ func Browse(local *net.UDPConn, remoteConn *net.UDPConn, remote *net.UDPAddr, cl
             return ERROR
         }
 
-        parsedGame, err := ParseGameInfo(response)
+        parsedGame, err := warcraft.ParseGameInfo(response)
         if err != nil {
             log.Println("Unable to parse game info:", err)
             updateGameInfo(nil)
@@ -117,7 +106,7 @@ func Browse(local *net.UDPConn, remoteConn *net.UDPConn, remote *net.UDPAddr, cl
         }
         updateGameInfo(&parsedGame)
 
-        ChangeServerPort(response, 6112)
+        warcraft.ChangeServerPort(response, 6112)
         local.Write(response)
         return OK
     }
