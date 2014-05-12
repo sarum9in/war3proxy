@@ -18,6 +18,7 @@ func SendBrowse(conn *net.UDPConn, remote *net.UDPAddr, clientVersion warcraft.C
 }
 
 func SendCancel(conn *net.UDPConn, game *warcraft.GameInfo) {
+    // FIXME int32 like a byte
     data := []byte {
         0xf7, 0x33, 0x08, 0x00,
         byte(game.Id), 0x00, 0x00, 0x00,
@@ -31,17 +32,11 @@ func SendCancel(conn *net.UDPConn, game *warcraft.GameInfo) {
 }
 
 func SendAnnounce(conn *net.UDPConn, game *warcraft.GameInfo) {
-    // FIXME int32 like a byte
     players := game.Slots - game.PlayerSlots + game.CurrentPlayers
-    data := []byte {
-        0xf7, 0x32, 0x10, 0x00,
-        byte(game.Id), 0x00, 0x00, 0x00,
-        byte(players), 0x00, 0x00, 0x00,
-        byte(game.Slots), 0x00, 0x00, 0x00,
-    }
+    announce := warcraft.NewAnnounce(game.Id, players, game.Slots)
 
-    log.Println("Sending announce for game:", game.Name)
-    _, err := conn.Write(data)
+    log.Printf("Sending announce for game: %q\n", game.Name)
+    _, err := conn.Write(announce.Bytes())
     if err != nil {
         log.Println("Unable to send announce:", err)
     }
