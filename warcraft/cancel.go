@@ -6,48 +6,48 @@ import (
     "fmt"
 )
 
-type Cancel struct {
+type CancelPacket struct {
     GameId uint32
 }
 
-var CancelHeader = [...]byte { 0xf7, 0x33, 0x08, 0x00 }
-const CancelSize = 8
+var CancelPacketHeader = [...]byte { 0xf7, 0x33, 0x08, 0x00 }
+const CancelPacketSize = 8
 
-func NewCancel(gameId uint32) Cancel {
-    return Cancel{
+func NewCancelPacket(gameId uint32) CancelPacket {
+    return CancelPacket{
         GameId: gameId,
     }
 }
 
-func (Cancel *Cancel) Bytes() []byte {
+func (CancelPacket *CancelPacket) Bytes() []byte {
     var buffer bytes.Buffer
 
-    buffer.Write(CancelHeader[:])
-    binary.Write(&buffer, binary.LittleEndian, Cancel.GameId)
+    buffer.Write(CancelPacketHeader[:])
+    binary.Write(&buffer, binary.LittleEndian, CancelPacket.GameId)
 
     result := buffer.Bytes()
-    if len(result) != CancelSize {
-        panic(fmt.Errorf("len(result) != CancelSize"))
+    if len(result) != CancelPacketSize {
+        panic(fmt.Errorf("len(result) != CancelPacketSize"))
     }
     return result
 }
 
-func ParseCancel(data []byte) (Cancel Cancel, err error) {
-    if len(data) != CancelSize {
-        err = fmt.Errorf("len(data) != CancelSize")
+func ParseCancelPacket(data []byte) (CancelPacket CancelPacket, err error) {
+    if len(data) != CancelPacketSize {
+        err = fmt.Errorf("len(data) != CancelPacketSize")
         return
     }
 
-    if !bytes.HasPrefix(data, CancelHeader[:]) {
+    if !bytes.HasPrefix(data, CancelPacketHeader[:]) {
         err = fmt.Errorf("Invalid header")
         return
     }
 
     buffer := bytes.NewBuffer(data[4:])
 
-    err = binary.Read(buffer, binary.LittleEndian, &Cancel.GameId)
+    err = binary.Read(buffer, binary.LittleEndian, &CancelPacket.GameId)
     if err != nil {
-        err = fmt.Errorf("Unable to parse Cancel.GameId: %v", err)
+        err = fmt.Errorf("Unable to parse CancelPacket.GameId: %v", err)
         return
     }
 

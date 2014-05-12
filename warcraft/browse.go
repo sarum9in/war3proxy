@@ -6,38 +6,38 @@ import (
     "fmt"
 )
 
-type Browse struct {
+type BrowsePacket struct {
     ClientVersion ClientVersion
 }
 
-var BrowseHeader = [...]byte{ 0xf7, 0x2f, 0x10, 0x00 }
-const BrowseSize = 12
+var BrowsePacketHeader = [...]byte{ 0xf7, 0x2f, 0x10, 0x00 }
+const BrowsePacketSize = 12
 
-func NewBrowse(clientVersion ClientVersion) Browse {
-    return Browse{ ClientVersion: clientVersion }
+func NewBrowsePacket(clientVersion ClientVersion) BrowsePacket {
+    return BrowsePacket{ ClientVersion: clientVersion }
 }
 
-func (browse *Browse) Bytes() []byte {
+func (browse *BrowsePacket) Bytes() []byte {
     var buffer bytes.Buffer
 
-    buffer.Write(BrowseHeader[:])
+    buffer.Write(BrowsePacketHeader[:])
     buffer.Write(browse.ClientVersion.Expansion[:])
     binary.Write(&buffer, binary.LittleEndian, browse.ClientVersion.Version)
 
     result := buffer.Bytes()
-    if len(result) != BrowseSize {
-        panic(fmt.Errorf("len(result) != BrowseSize"))
+    if len(result) != BrowsePacketSize {
+        panic(fmt.Errorf("len(result) != BrowsePacketSize"))
     }
     return result
 }
 
-func ParseBrowse(data []byte) (browse Browse, err error) {
-    if len(data) != BrowseSize {
-        err = fmt.Errorf("len(data) != BrowseSize")
+func ParseBrowsePacket(data []byte) (browse BrowsePacket, err error) {
+    if len(data) != BrowsePacketSize {
+        err = fmt.Errorf("len(data) != BrowsePacketSize")
         return
     }
 
-    if !bytes.HasPrefix(data, BrowseHeader[:]) {
+    if !bytes.HasPrefix(data, BrowsePacketHeader[:]) {
         err = fmt.Errorf("Invalid header")
         return
     }

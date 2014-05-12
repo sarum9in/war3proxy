@@ -8,30 +8,31 @@ import (
     "../warcraft"
 )
 
-func SendBrowse(conn *net.UDPConn, remote *net.UDPAddr, clientVersion warcraft.ClientVersion) {
-    browse := warcraft.NewBrowse(clientVersion)
-    log.Println("Sending browse for client version:", clientVersion)
+func SendBrowsePacket(conn *net.UDPConn, remote *net.UDPAddr, clientVersion warcraft.ClientVersion) {
+    browse := warcraft.NewBrowsePacket(clientVersion)
+    log.Printf("Sending browse packet for client version: %q\n", clientVersion)
+
     _, err := conn.WriteTo(browse.Bytes(), remote)
     if err != nil {
         log.Println("Unable to send browse:", err)
     }
 }
 
-func SendCancel(conn *net.UDPConn, game *warcraft.GameInfo) {
-    cancel := warcraft.NewCancel(game.Id)
+func SendCancelPacket(conn *net.UDPConn, game *warcraft.GameInfo) {
+    cancel := warcraft.NewCancelPacket(game.Id)
 
-    log.Printf("Sending cancel for game: %q\n", game.Name)
+    log.Printf("Sending cancel packet for game: %q\n", game.Name)
     _, err := conn.Write(cancel.Bytes())
     if err != nil {
         log.Println("Unable to send cancel:", err)
     }
 }
 
-func SendAnnounce(conn *net.UDPConn, game *warcraft.GameInfo) {
+func SendAnnouncePacket(conn *net.UDPConn, game *warcraft.GameInfo) {
     players := game.Slots - game.PlayerSlots + game.CurrentPlayers
-    announce := warcraft.NewAnnounce(game.Id, players, game.Slots)
+    announce := warcraft.NewAnnouncePacket(game.Id, players, game.Slots)
 
-    log.Printf("Sending announce for game: %q\n", game.Name)
+    log.Printf("Sending announce packet for game: %q\n", game.Name)
     _, err := conn.Write(announce.Bytes())
     if err != nil {
         log.Println("Unable to send announce:", err)
@@ -45,7 +46,7 @@ func Browse(local *net.UDPConn, remoteConn *net.UDPConn, remote *net.UDPAddr, cl
         if g == nil {
             if game != nil {
                 if time.Now().After(timepoint.Add(3 * time.Second)) {
-                    SendCancel(local, game)
+                    SendCancelPacket(local, game)
                     game = nil
                 }
             }
@@ -53,7 +54,7 @@ func Browse(local *net.UDPConn, remoteConn *net.UDPConn, remote *net.UDPAddr, cl
             game = g
             timepoint = time.Now()
             log.Println("Found game:", game)
-            SendAnnounce(local, game)
+            SendAnnouncePacket(local, game)
         }
     }
 
@@ -108,7 +109,7 @@ func Browse(local *net.UDPConn, remoteConn *net.UDPConn, remote *net.UDPAddr, cl
         case OK:
         case TIMEOUT:
             time.Sleep(time.Second)
-            SendBrowse(remoteConn, remote, clientVersion)
+            SendBrowsePacket(remoteConn, remote, clientVersion)
         case ERROR:
         }
     }
