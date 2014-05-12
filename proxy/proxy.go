@@ -18,14 +18,10 @@ func SendBrowse(conn *net.UDPConn, remote *net.UDPAddr, clientVersion warcraft.C
 }
 
 func SendCancel(conn *net.UDPConn, game *warcraft.GameInfo) {
-    // FIXME int32 like a byte
-    data := []byte {
-        0xf7, 0x33, 0x08, 0x00,
-        byte(game.Id), 0x00, 0x00, 0x00,
-    }
+    cancel := warcraft.NewCancel(game.Id)
 
-    log.Println("Sending cancel for game:", game.Name)
-    _, err := conn.Write(data)
+    log.Printf("Sending cancel for game: %q\n", game.Name)
+    _, err := conn.Write(cancel.Bytes())
     if err != nil {
         log.Println("Unable to send cancel:", err)
     }
