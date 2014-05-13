@@ -5,8 +5,8 @@ import "fmt"
 type Expansion [4]byte
 
 type ClientVersion struct {
-	Expansion Expansion
-	Version uint32
+    Expansion Expansion
+    Version uint32
 }
 
 func (clientVersion ClientVersion) String() string {

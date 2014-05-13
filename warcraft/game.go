@@ -1,20 +1,20 @@
 package warcraft
 
 import (
-	"bytes"
-	"errors"
-	"encoding/binary"
+    "bytes"
+    "errors"
+    "encoding/binary"
     "fmt"
 )
 
 type GameInfo struct {
-	Id uint32
-	Name string
-	Map string
-	Slots uint32
-	CurrentPlayers uint32
-	PlayerSlots uint32
-	Port uint16
+    Id uint32
+    Name string
+    Map string
+    Slots uint32
+    CurrentPlayers uint32
+    PlayerSlots uint32
+    Port uint16
 }
 
 func (game GameInfo) String() string {
@@ -28,10 +28,10 @@ func ParseGameInfo(data []byte) (game GameInfo, err error) {
         }
     }()
 
-	if data[0] != 0xf7 || data[1] != 0x30 {
-		err = errors.New("Not a game info")
+    if data[0] != 0xf7 || data[1] != 0x30 {
+        err = errors.New("Not a game info")
         return
-	}
+    }
 
     ParseInteger(data[0xc:], &game.Id)
     var nameLength int
@@ -57,8 +57,8 @@ func ChangeServerPort(data []byte, port uint16) {
 }
 
 func ParseInteger(data []byte, integer interface{}) {
-	buffer := bytes.NewBuffer(data)
-	err := binary.Read(buffer, binary.LittleEndian, integer)
+    buffer := bytes.NewBuffer(data)
+    err := binary.Read(buffer, binary.LittleEndian, integer)
     if err != nil {
         panic(err)
     }
@@ -68,19 +68,19 @@ func ParseString(data []byte) (str string, rawSize int) {
     raw := ParseRawString(data)
     str = string(raw) // UTF8
     rawSize = len(raw) + 1
-	return
+    return
 }
 
 func ParseRawString(data []byte) []byte {
-	var output bytes.Buffer
-	for _, c := range data {
-		if c == 0 {
-			break
-		} else {
-			output.WriteByte(byte(c))
-		}
-	}
-	return output.Bytes()
+    var output bytes.Buffer
+    for _, c := range data {
+        if c == 0 {
+            break
+        } else {
+            output.WriteByte(byte(c))
+        }
+    }
+    return output.Bytes()
 }
 
 func EncodeBytes(data []byte) []byte {
