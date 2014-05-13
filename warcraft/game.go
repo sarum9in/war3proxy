@@ -37,9 +37,8 @@ func ParseGameInfo(data []byte) (game GameInfo, err error) {
     var nameLength int
     game.Name, nameLength = ParseString(data[0x14:])
 
-    cryptstart := 0x14 + nameLength + 1
-    decrypted := DecryptString(data[cryptstart:])
-    game.Map, _ = ParseString(decrypted[0xd:])
+    decoded := DecodeBytes(data[0x14 + nameLength + 1:])
+    game.Map, _ = ParseString(decoded[0xd:])
 
     length := len(data)
 
@@ -84,19 +83,45 @@ func ParseRawString(data []byte) []byte {
 	return output.Bytes()
 }
 
-func DecryptString(data []byte) []byte {
-	var output bytes.Buffer
+func EncodeBytes(data []byte) []byte {
+    var mask byte = 1
+    groups := (len(data) + 6) / 7
+    result := make([]byte, len(data) + groups)
+
+    for pos, c := range data {
+        // for each 7 bytes from data save [mask, c0, c1, ..., c6]
+        rgroup := pos / 7
+        rpos := uint(pos % 7) + 1
+        dst := uint(8 * rgroup) + rpos
+        if c % 2 == 0 {
+            result[dst] = c + 1
+        } else {
+            result[dst] = c
+            mask |= byte(0x1 << rpos)
+        }
+        if rpos == 7 || pos + 1 == len(data) {
+            result[8 * rgroup] = mask
+            mask = 1
+        }
+    }
+
+    return result
+}
+
+func DecodeBytes(data []byte) []byte {
+    var buffer bytes.Buffer
     var mask byte = 0
     for pos, c := range data {
-        if pos % 8 == 0 {
+        rpos := uint(pos % 8)
+        if rpos == 0 {
             mask = c
         } else {
-            if mask & (0x1 << uint(pos % 8)) == 0 {
-                output.WriteByte(c - 1)
+            if mask & byte(0x1 << rpos) == 0 {
+                buffer.WriteByte(c - 1)
             } else {
-                output.WriteByte(c)
+                buffer.WriteByte(c)
             }
         }
     }
-    return output.Bytes()
+    return buffer.Bytes()
 }
