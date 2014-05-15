@@ -24,6 +24,7 @@ func browse(local *net.UDPAddr,
     Browse(localConn, remoteConn, remote, clientVersion)
 }
 
+// Listen to LAN clients, proxying requests to remote server.
 func Listen(remote string, clientVersion warcraft.ClientVersion) {
     remote_udp_addr, err := net.ResolveUDPAddr("udp", remote)
     if err != nil {
@@ -35,6 +36,7 @@ func Listen(remote string, clientVersion warcraft.ClientVersion) {
         Port: 6112,
     }
 
+    // local broadcast address
     local_udp_addr := &net.UDPAddr{
         IP: net.IPv4(255, 255, 255, 255),
         Port: 6112,

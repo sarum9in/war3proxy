@@ -8,6 +8,8 @@ import (
     "../warcraft"
 )
 
+// Send browse packet to remote via conn for clientVersion.
+// This is used to discover remote's games.
 func SendBrowsePacket(conn *net.UDPConn, remote *net.UDPAddr, clientVersion warcraft.ClientVersion) {
     browse := warcraft.NewBrowsePacket(clientVersion)
     log.Printf("Sending browse packet for client version: %q\n", clientVersion)
@@ -18,6 +20,8 @@ func SendBrowsePacket(conn *net.UDPConn, remote *net.UDPAddr, clientVersion warc
     }
 }
 
+// Send cancel packet via conn for game.
+// This is used to cancel previously announced game.
 func SendCancelPacket(conn *net.UDPConn, game *warcraft.GameInfo) {
     cancel := warcraft.NewCancelPacket(game.Id)
 
@@ -28,6 +32,9 @@ func SendCancelPacket(conn *net.UDPConn, game *warcraft.GameInfo) {
     }
 }
 
+// Send announce packet via conn for game.
+// This is used to make game known for clients
+// or update already known game's info.
 func SendAnnouncePacket(conn *net.UDPConn, game *warcraft.GameInfo) {
     players := game.Slots - game.PlayerSlots + game.CurrentPlayers
     announce := warcraft.NewAnnouncePacket(game.Id, players, game.Slots)
@@ -39,13 +46,25 @@ func SendAnnouncePacket(conn *net.UDPConn, game *warcraft.GameInfo) {
     }
 }
 
-func Browse(local *net.UDPConn, remoteConn *net.UDPConn, remote *net.UDPAddr, clientVersion warcraft.ClientVersion) {
+// If there is no response from remote server
+// for GameTimeout time the game is considered lost.
+var GameTimeout = 3 * time.Second
+
+// Pass-through remote client to local network.
+func Browse(local *net.UDPConn,
+            remoteConn *net.UDPConn,
+            remote *net.UDPAddr,
+            clientVersion warcraft.ClientVersion) {
     var game *warcraft.GameInfo = nil
     timepoint := time.Now()
+
+    // update game sending announce or cancel packet
     updateGameInfo := func(g *warcraft.GameInfo) {
         if g == nil {
             if game != nil {
-                if time.Now().After(timepoint.Add(3 * time.Second)) {
+                // remote client does not send cancel packets,
+                // so it is necessary to track game's existence
+                if time.Now().After(timepoint.Add(GameTimeout)) {
                     SendCancelPacket(local, game)
                     game = nil
                 }
@@ -65,6 +84,7 @@ func Browse(local *net.UDPConn, remoteConn *net.UDPConn, remote *net.UDPAddr, cl
     )
 
     data := make([]byte, 4096)
+    // read remote client's response
     readResponse := func() int {
         log.Println("Waiting for response...")
         remoteConn.SetReadDeadline(time.Now().Add(time.Second))
@@ -98,6 +118,7 @@ func Browse(local *net.UDPConn, remoteConn *net.UDPConn, remote *net.UDPAddr, cl
         }
         updateGameInfo(&parsedGame)
 
+        // update remote's server port to local
         warcraft.ChangeServerPort(response, 6112)
         local.Write(response)
         return OK
