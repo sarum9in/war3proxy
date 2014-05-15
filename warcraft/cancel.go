@@ -53,4 +53,3 @@ func ParseCancelPacket(data []byte) (CancelPacket CancelPacket, err error) {
 
     return
 }
-
