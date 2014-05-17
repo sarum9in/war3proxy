@@ -19,8 +19,8 @@ type Writer interface {
 
 var PacketHeader byte = 0xf7
 
-func ParsePacket(data []byte) (packet byte, packetData []byte, err error) {
-    packet, packetData, err = ReadPacket(bytes.NewReader(data))
+func ParsePacket(data []byte) (packetType byte, packetData []byte, err error) {
+    packetType, packetData, err = ReadPacket(bytes.NewReader(data))
     if err != nil {
         return
     }
@@ -34,10 +34,10 @@ func ParsePacket(data []byte) (packet byte, packetData []byte, err error) {
     return
 }
 
-func PacketBytes(packet byte, data []byte) []byte {
+func PacketBytes(packetType byte, data []byte) []byte {
     var buffer bytes.Buffer
 
-    err := WritePacket(&buffer, packet, data)
+    err := WritePacket(&buffer, packetType, data)
     if err != nil {
         panic(err)
     }
@@ -45,7 +45,7 @@ func PacketBytes(packet byte, data []byte) []byte {
     return buffer.Bytes()
 }
 
-func ReadPacket(reader Reader) (packet byte, data []byte, err error) {
+func ReadPacket(reader Reader) (packetType byte, data []byte, err error) {
     var header [2]byte
     _, err = reader.Read(header[:])
     if err != nil {
@@ -57,7 +57,7 @@ func ReadPacket(reader Reader) (packet byte, data []byte, err error) {
         return
     }
 
-    packet = header[1]
+    packetType = header[1]
 
     var size uint16
     ReadInteger(reader, &size)
@@ -75,13 +75,13 @@ func ReadPacket(reader Reader) (packet byte, data []byte, err error) {
     return
 }
 
-func WritePacket(writer Writer, packet byte, data []byte) (err error) {
+func WritePacket(writer Writer, packetType byte, data []byte) (err error) {
     err = writer.WriteByte(PacketHeader)
     if err != nil {
         return
     }
 
-    err = writer.WriteByte(packet)
+    err = writer.WriteByte(packetType)
     if err != nil {
         return
     }
