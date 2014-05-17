@@ -1,6 +1,35 @@
 package warcraft
 
-import "testing"
+import (
+    "bytes"
+    "testing"
+)
+
+func TestInteger(t *testing.T) {
+    var buffer bytes.Buffer
+
+    var integer uint32 = 10
+    WriteInteger(&buffer, integer)
+
+    var integer2 uint32
+    ReadInteger(&buffer, &integer2)
+    if integer2 != integer {
+        t.Errorf("Failed: %d != %d", integer2, integer)
+    }
+}
+
+func TestNullTerminated(t *testing.T) {
+    var buffer bytes.Buffer
+
+    WriteNullTerminatedBytes(&buffer, []byte {1, 2, 3, 4, 5})
+    if !bytes.Equal(buffer.Bytes(), []byte {1, 2, 3, 4, 5, 0}) {
+        t.Errorf("Failed write")
+    }
+
+    if !bytes.Equal(ReadNullTerminatedBytes(&buffer), []byte {1, 2, 3, 4, 5}) {
+        t.Errorf("Failed read")
+    }
+}
 
 func TestEncoding(t *testing.T) {
     tests := [...]string {

@@ -3,33 +3,78 @@ package warcraft
 import (
     "bytes"
     "encoding/binary"
+    "fmt"
+    "io"
 )
 
-func ParseInteger(data []byte, integer interface{}) {
-    buffer := bytes.NewBuffer(data)
-    err := binary.Read(buffer, binary.LittleEndian, integer)
+type Reader interface {
+    io.Reader
+    io.ByteReader
+}
+
+type Writer interface {
+    io.Writer
+    io.ByteWriter
+}
+
+func ReadInteger(reader Reader, integer interface{}) {
+    err := binary.Read(reader, binary.LittleEndian, integer)
     if err != nil {
         panic(err)
     }
 }
 
-func ParseString(data []byte) (str string, rawSize int) {
-    raw := ParseRawString(data)
-    str = string(raw) // UTF8
-    rawSize = len(raw) + 1
-    return
+func WriteInteger(writer Writer, integer interface{}) {
+    err := binary.Write(writer, binary.LittleEndian, integer)
+    if err != nil {
+        panic(err)
+    }
 }
 
-func ParseRawString(data []byte) []byte {
-    var output bytes.Buffer
-    for _, c := range data {
+func ReadNullTerminatedString(reader Reader) string {
+    raw := ReadNullTerminatedBytes(reader)
+    return string(raw) // UTF8
+}
+
+func WriteNullTerminatedString(writer Writer, data string) {
+    WriteNullTerminatedBytes(writer, []byte(data))
+}
+
+func ReadNullTerminatedBytes(reader Reader) []byte {
+    var buffer bytes.Buffer
+
+    var err error
+
+    for c, err := reader.ReadByte(); err == nil; c, err = reader.ReadByte() {
         if c == 0 {
             break
         } else {
-            output.WriteByte(byte(c))
+            buffer.WriteByte(byte(c))
         }
     }
-    return output.Bytes()
+    if err != nil && err != io.EOF {
+        panic(err)
+    }
+
+    return buffer.Bytes()
+}
+
+func WriteNullTerminatedBytes(writer Writer, data []byte) {
+    for _, c := range data {
+        if c == 0 {
+            panic(fmt.Errorf("Invalid data with null character"))
+        }
+    }
+
+    _, err := writer.Write(data)
+    if err != nil {
+        panic(err)
+    }
+
+    err = writer.WriteByte(0)
+    if err != nil {
+        panic(err)
+    }
 }
 
 func EncodeBytes(data []byte) []byte {
