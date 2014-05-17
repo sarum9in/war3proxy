@@ -1,7 +1,6 @@
 package proxy
 
 import (
-    "bytes"
     "log"
     "net"
     "time"
@@ -104,8 +103,8 @@ func Browse(local *net.UDPConn,
         }
         response := data[:n]
 
-        if !bytes.Equal(src.IP, remote.IP) {
-            log.Println("Invalid game info source:", src)
+        if !src.IP.Equal(remote.IP) || src.Port != remote.Port {
+            log.Println("Invalid game info source:", src.IP, "!=", remote.IP)
             updateGameInfo(nil)
             return ERROR
         }
