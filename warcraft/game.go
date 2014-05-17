@@ -90,9 +90,9 @@ func EncodeBytes(data []byte) []byte {
 
     for pos, c := range data {
         // for each 7 bytes from data save [mask, c0, c1, ..., c6]
-        rgroup := pos / 7
+        rgroup := uint(pos / 7)
         rpos := uint(pos % 7) + 1
-        dst := uint(8 * rgroup) + rpos
+        dst := 8 * rgroup + rpos
         if c % 2 == 0 {
             result[dst] = c + 1
         } else {
