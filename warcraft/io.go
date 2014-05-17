@@ -1,6 +1,7 @@
 package warcraft
 
 import (
+    "bytes"
     "encoding/binary"
     "fmt"
     "io"
@@ -17,6 +18,32 @@ type Writer interface {
 }
 
 var PacketHeader byte = 0xf7
+
+func ParsePacket(data []byte) (packet byte, packetData []byte, err error) {
+    packet, packetData, err = ReadPacket(bytes.NewReader(data))
+    if err != nil {
+        return
+    }
+
+    expectedPacketDataSize := len(data) - 2 - 2
+    if len(packetData) != expectedPacketDataSize {
+        err = fmt.Errorf("Invalid packet's data size: %d != %d", len(packetData), expectedPacketDataSize)
+        return
+    }
+
+    return
+}
+
+func PacketBytes(packet byte, data []byte) []byte {
+    var buffer bytes.Buffer
+
+    err := WritePacket(&buffer, packet, data)
+    if err != nil {
+        panic(err)
+    }
+
+    return buffer.Bytes()
+}
 
 func ReadPacket(reader Reader) (packet byte, data []byte, err error) {
     var header [2]byte
