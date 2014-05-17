@@ -2,45 +2,34 @@ package warcraft
 
 import (
     "bytes"
-    "encoding/binary"
     "fmt"
     "io"
 )
 
-type Reader interface {
-    io.Reader
-    io.ByteReader
-}
-
-type Writer interface {
-    io.Writer
-    io.ByteWriter
-}
-
-func ReadInteger(reader Reader, integer interface{}) {
-    err := binary.Read(reader, binary.LittleEndian, integer)
+func ReadIntegerRequired(reader Reader, integer interface{}) {
+    err := ReadInteger(reader, integer)
     if err != nil {
         panic(err)
     }
 }
 
-func WriteInteger(writer Writer, integer interface{}) {
-    err := binary.Write(writer, binary.LittleEndian, integer)
+func WriteIntegerRequired(writer Writer, integer interface{}) {
+    err := WriteInteger(writer, integer)
     if err != nil {
         panic(err)
     }
 }
 
-func ReadNullTerminatedString(reader Reader) string {
-    raw := ReadNullTerminatedBytes(reader)
+func ReadNullTerminatedStringRequired(reader Reader) string {
+    raw := ReadNullTerminatedBytesRequired(reader)
     return string(raw) // UTF8
 }
 
-func WriteNullTerminatedString(writer Writer, data string) {
-    WriteNullTerminatedBytes(writer, []byte(data))
+func WriteNullTerminatedStringRequired(writer Writer, data string) {
+    WriteNullTerminatedBytesRequired(writer, []byte(data))
 }
 
-func ReadNullTerminatedBytes(reader Reader) []byte {
+func ReadNullTerminatedBytesRequired(reader Reader) []byte {
     var buffer bytes.Buffer
 
     var err error
@@ -59,7 +48,7 @@ func ReadNullTerminatedBytes(reader Reader) []byte {
     return buffer.Bytes()
 }
 
-func WriteNullTerminatedBytes(writer Writer, data []byte) {
+func WriteNullTerminatedBytesRequired(writer Writer, data []byte) {
     for _, c := range data {
         if c == 0 {
             panic(fmt.Errorf("Invalid data with null character"))

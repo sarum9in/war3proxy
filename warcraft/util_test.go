@@ -21,12 +21,12 @@ func TestInteger(t *testing.T) {
 func TestNullTerminated(t *testing.T) {
     var buffer bytes.Buffer
 
-    WriteNullTerminatedBytes(&buffer, []byte {1, 2, 3, 4, 5})
+    WriteNullTerminatedBytesRequired(&buffer, []byte {1, 2, 3, 4, 5})
     if !bytes.Equal(buffer.Bytes(), []byte {1, 2, 3, 4, 5, 0}) {
         t.Errorf("Failed write")
     }
 
-    if !bytes.Equal(ReadNullTerminatedBytes(&buffer), []byte {1, 2, 3, 4, 5}) {
+    if !bytes.Equal(ReadNullTerminatedBytesRequired(&buffer), []byte {1, 2, 3, 4, 5}) {
         t.Errorf("Failed read")
     }
 }

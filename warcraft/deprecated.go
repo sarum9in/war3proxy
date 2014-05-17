@@ -3,7 +3,7 @@ package warcraft
 import "bytes"
 
 func ParseInteger(data []byte, integer interface{}) {
-    ReadInteger(bytes.NewBuffer(data), integer)
+    ReadIntegerRequired(bytes.NewBuffer(data), integer)
 }
 
 func ParseString(data []byte) (str string, rawSize int) {
@@ -14,5 +14,5 @@ func ParseString(data []byte) (str string, rawSize int) {
 }
 
 func ParseRawString(data []byte) []byte {
-    return ReadNullTerminatedBytes(bytes.NewBuffer(data))
+    return ReadNullTerminatedBytesRequired(bytes.NewBuffer(data))
 }
