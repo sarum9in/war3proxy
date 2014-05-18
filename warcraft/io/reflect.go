@@ -50,8 +50,8 @@ func defaultReadFrom(reader Reader, r reflect.Value) (err error) {
     default:
         for i := 0; i < r.NumField(); i++ {
             field := r.Field(i)
-            switch field.Kind() {
-            case reflect.Struct:
+            switch r.Type().Field(i).Tag.Get("encoding") {
+            case "nested":
                 codeReader := NewCodeReader(reader)
                 err = reflectRead(codeReader, field)
                 if err != nil {
@@ -111,8 +111,8 @@ func defaultWriteTo(writer Writer, r reflect.Value) (err error) {
     default:
         for i := 0; i < r.NumField(); i++ {
             field := r.Field(i)
-            switch field.Kind() {
-            case reflect.Struct:
+            switch r.Type().Field(i).Tag.Get("encoding") {
+            case "nested":
                 codeWriter := NewCodeWriter(writer)
                 err = reflectWrite(codeWriter, field)
                 if err != nil {

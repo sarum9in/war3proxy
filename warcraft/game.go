@@ -17,7 +17,7 @@ type GameInfoPacket struct {
     entryKey uint32
     Name string
     Map string
-    MapInfo MapInfo
+    MapInfo MapInfo `encode:"nested"`
     Slots uint32
     gameType [4]byte
     CurrentPlayers uint32
