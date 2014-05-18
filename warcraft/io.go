@@ -150,3 +150,24 @@ func WriteNullTerminatedBytes(writer Writer, data []byte) (err error) {
 
     return
 }
+
+func ReadNullTerminatedString(reader Reader) (str string, err error) {
+    raw, err := ReadNullTerminatedBytes(reader)
+    if err != nil {
+        return
+    }
+
+    str = string(raw) // UTF8
+
+    return
+}
+
+func WriteNullTerminatedString(writer Writer, data string) (err error) {
+    err = WriteNullTerminatedBytes(writer, []byte(data)) // UTF8
+    if err != nil {
+        return
+    }
+
+    return
+}
+

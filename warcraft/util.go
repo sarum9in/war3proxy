@@ -19,12 +19,18 @@ func WriteIntegerRequired(writer Writer, integer interface{}) {
 }
 
 func ReadNullTerminatedStringRequired(reader Reader) string {
-    raw := ReadNullTerminatedBytesRequired(reader)
-    return string(raw) // UTF8
+    data, err := ReadNullTerminatedString(reader)
+    if err != nil {
+        panic(err)
+    }
+    return data
 }
 
 func WriteNullTerminatedStringRequired(writer Writer, data string) {
-    WriteNullTerminatedBytesRequired(writer, []byte(data))
+    err := WriteNullTerminatedString(writer, data)
+    if err != nil {
+        panic(err)
+    }
 }
 
 func ReadNullTerminatedBytesRequired(reader Reader) []byte {
