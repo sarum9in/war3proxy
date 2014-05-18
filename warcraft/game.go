@@ -16,7 +16,6 @@ type GameInfoPacket struct {
     Id uint32
     EntryKey uint32
     Name string
-    Map string
     MapInfo MapInfo `encode:"nested"`
     Slots uint32
     gameType [4]byte
@@ -51,5 +50,5 @@ func ParseGameInfoPacket(data []byte) (gameInfo GameInfoPacket, err error) {
 }
 
 func (game GameInfoPacket) String() string {
-    return fmt.Sprintf("Name: %q, Map: %q", game.Name, game.Map)
+    return fmt.Sprintf("Name: %q, Map: %q", game.Name, game.MapInfo.Path)
 }
