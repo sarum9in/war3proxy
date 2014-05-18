@@ -14,7 +14,7 @@ type MapInfo struct {
 type GameInfoPacket struct {
     ClientVersion ClientVersion
     Id uint32
-    entryKey uint32
+    EntryKey uint32
     Name string
     Map string
     MapInfo MapInfo `encode:"nested"`
