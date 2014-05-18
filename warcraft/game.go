@@ -1,55 +1,55 @@
 package warcraft
 
 import (
-    "errors"
+    "./io"
     "fmt"
 )
 
-type GameInfo struct {
+type MapInfo struct {
+    Dummy [0x14]byte
+    Path string
+    HostName string
+}
+
+type GameInfoPacket struct {
+    ClientVersion ClientVersion
     Id uint32
+    entryKey uint32
     Name string
     Map string
+    MapInfo MapInfo
     Slots uint32
+    gameType [4]byte
     CurrentPlayers uint32
     PlayerSlots uint32
+    UpTime uint32
     Port uint16
 }
 
-func (game GameInfo) String() string {
-    return fmt.Sprintf("Name: %q, Map: %q", game.Name, game.Map)
+var GameInfoPacketType = byte(0x30)
+
+func (gameInfoPacket *GameInfoPacket) PacketType() byte {
+    return GameInfoPacketType
 }
 
-func ParseGameInfo(data []byte) (game GameInfo, err error) {
-    defer func() {
-        if r := recover(); r != nil {
-            err = r.(error)
-        }
-    }()
+func init() {
+    io.RegisterPacketType(GameInfoPacketType, func() io.Packet {
+        return new(GameInfoPacket)
+    })
+}
 
-    if data[0] != 0xf7 || data[1] != 0x30 {
-        err = errors.New("Not a game info")
-        return
+func (gameInfo *GameInfoPacket) Bytes() []byte {
+    return io.PacketBytes(gameInfo)
+}
+
+func ParseGameInfoPacket(data []byte) (gameInfo GameInfoPacket, err error) {
+    err = io.ParsePacket(&gameInfo, data)
+    if err != nil {
+        err = fmt.Errorf("Unable to parse game info packet: %v", err)
     }
-
-    ParseInteger(data[0xc:], &game.Id)
-    var nameLength int
-    game.Name, nameLength = ParseString(data[0x14:])
-
-    decoded := DecodeBytes(data[0x14 + nameLength + 1:])
-    game.Map, _ = ParseString(decoded[0xd:])
-
-    length := len(data)
-
-    ParseInteger(data[length - 22:], &game.Slots)
-    ParseInteger(data[length - 14:], &game.CurrentPlayers)
-    ParseInteger(data[length - 10:], &game.PlayerSlots)
-    ParseInteger(data[length - 2:], &game.Port)
-
     return
 }
 
-func ChangeServerPort(data []byte, port uint16) {
-    length := len(data)
-    data[length - 2] = byte(port & 0xff)
-    data[length - 1] = byte((port >> 8) & 0xff)
+func (game GameInfoPacket) String() string {
+    return fmt.Sprintf("Name: %q, Map: %q", game.Name, game.Map)
 }

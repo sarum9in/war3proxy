@@ -1,4 +1,4 @@
-package warcraft
+package io
 
 import (
     "fmt"
@@ -26,35 +26,48 @@ func reflectRead(reader Reader, r reflect.Value) error {
     }
 }
 
-func defaultReadFrom(reader Reader, r reflect.Value) error {
+func defaultReadFrom(reader Reader, r reflect.Value) (err error) {
     switch r.Kind() {
     case reflect.Ptr:
-        return defaultReadFrom(reader, r.Elem())
+        err = defaultReadFrom(reader, r.Elem())
+        return
     case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
          reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-        return ReadInteger(reader, r.Addr().Interface())
+        err = ReadInteger(reader, r.Addr().Interface())
+        return
     case reflect.String:
-        str, err := ReadNullTerminatedString(reader)
+        var str string
+        str, err = ReadNullTerminatedString(reader)
         if err != nil {
-            return err
+            return
         }
         r.SetString(str)
     case reflect.Array: // we use only byte arrays
-        _, err := reader.Read(r.Slice(0, r.Len()).Bytes())
+        _, err = reader.Read(r.Slice(0, r.Len()).Bytes())
         if err != nil {
-            return err
+            return
         }
     default:
         for i := 0; i < r.NumField(); i++ {
             field := r.Field(i)
-            err := reflectRead(reader, field)
+            switch field.Kind() {
+            case reflect.Struct:
+                codeReader := NewCodeReader(reader)
+                err = reflectRead(codeReader, field)
+                if err != nil {
+                    return
+                }
+                _, err = codeReader.SkipAll()
+            default:
+                err = reflectRead(reader, field)
+            }
             if err != nil {
-                return err
+                return
             }
         }
     }
 
-    return nil
+    return
 }
 
 func ReflectWrite(writer Writer, v interface{}) error {
@@ -78,7 +91,7 @@ func reflectWrite(writer Writer, r reflect.Value) error {
     }
 }
 
-func defaultWriteTo(writer Writer, r reflect.Value) error {
+func defaultWriteTo(writer Writer, r reflect.Value) (err error) {
     switch r.Kind() {
     case reflect.Ptr:
         return defaultWriteTo(writer, r.Elem())
@@ -86,24 +99,34 @@ func defaultWriteTo(writer Writer, r reflect.Value) error {
          reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
         return WriteInteger(writer, r.Interface())
     case reflect.String:
-        err := WriteNullTerminatedString(writer, r.String())
+        err = WriteNullTerminatedString(writer, r.String())
         if err != nil {
-            return err
+            return
         }
     case reflect.Array: // we use only byte arrays
-        _, err := writer.Write(r.Slice(0, r.Len()).Bytes())
+        _, err = writer.Write(r.Slice(0, r.Len()).Bytes())
         if err != nil {
             return err
         }
     default:
         for i := 0; i < r.NumField(); i++ {
             field := r.Field(i)
-            err := reflectWrite(writer, field)
+            switch field.Kind() {
+            case reflect.Struct:
+                codeWriter := NewCodeWriter(writer)
+                err = reflectWrite(codeWriter, field)
+                if err != nil {
+                    return
+                }
+                err = codeWriter.Close()
+            default:
+                err = reflectWrite(writer, field)
+            }
             if err != nil {
-                return err
+                return
             }
         }
     }
 
-    return nil
+    return
 }

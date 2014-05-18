@@ -21,7 +21,7 @@ func SendBrowsePacket(conn *net.UDPConn, remote *net.UDPAddr, clientVersion warc
 
 // Send cancel packet via conn for game.
 // This is used to cancel previously announced game.
-func SendCancelPacket(conn *net.UDPConn, game *warcraft.GameInfo) {
+func SendCancelPacket(conn *net.UDPConn, game *warcraft.GameInfoPacket) {
     cancel := warcraft.NewCancelPacket(game.Id)
 
     log.Printf("Sending cancel packet for game: %q\n", game.Name)
@@ -34,7 +34,7 @@ func SendCancelPacket(conn *net.UDPConn, game *warcraft.GameInfo) {
 // Send announce packet via conn for game.
 // This is used to make game known for clients
 // or update already known game's info.
-func SendAnnouncePacket(conn *net.UDPConn, game *warcraft.GameInfo) {
+func SendAnnouncePacket(conn *net.UDPConn, game *warcraft.GameInfoPacket) {
     players := game.Slots - game.PlayerSlots + game.CurrentPlayers
     announce := warcraft.NewAnnouncePacket(game.Id, players, game.Slots)
 
@@ -54,11 +54,11 @@ func Browse(local *net.UDPConn,
             remoteConn *net.UDPConn,
             remote *net.UDPAddr,
             clientVersion warcraft.ClientVersion) {
-    var game *warcraft.GameInfo = nil
+    var game *warcraft.GameInfoPacket = nil
     timepoint := time.Now()
 
     // update game sending announce or cancel packet
-    updateGameInfo := func(g *warcraft.GameInfo) {
+    updateGameInfo := func(g *warcraft.GameInfoPacket) {
         if g == nil {
             if game != nil {
                 // remote client does not send cancel packets,
@@ -109,7 +109,7 @@ func Browse(local *net.UDPConn,
             return ERROR
         }
 
-        parsedGame, err := warcraft.ParseGameInfo(response)
+        parsedGame, err := warcraft.ParseGameInfoPacket(response)
         if err != nil {
             log.Println("Unable to parse game info:", err)
             updateGameInfo(nil)
@@ -118,8 +118,8 @@ func Browse(local *net.UDPConn,
         updateGameInfo(&parsedGame)
 
         // update remote's server port to local
-        warcraft.ChangeServerPort(response, 6112)
-        local.Write(response)
+        parsedGame.Port = 6112
+        local.Write(parsedGame.Bytes())
         return OK
     }
 

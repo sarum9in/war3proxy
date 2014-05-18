@@ -1,4 +1,4 @@
-package warcraft
+package io
 
 import (
     "bytes"
@@ -12,12 +12,12 @@ func TestPacket(t *testing.T) {
     expectedData := []byte { 1, 2, 3, 4, 5 }
     expectedRaw := []byte { PacketHeader, 10, 9, 0, 1, 2, 3, 4, 5 }
 
-    WritePacket(&buffer, expectedPacketType, expectedData)
+    WriteRawPacket(&buffer, expectedPacketType, expectedData)
     if !bytes.Equal(buffer.Bytes(), expectedRaw) {
         t.Errorf("Failed")
     }
 
-    packetType, data, err := ReadPacket(&buffer)
+    packetType, data, err := ReadRawPacket(&buffer)
     if err != nil {
         t.Errorf("Failed: %v", err)
     }
@@ -28,12 +28,12 @@ func TestPacket(t *testing.T) {
         t.Errorf("Failed: %v != %v", data, expectedData)
     }
 
-    raw := PacketBytes(expectedPacketType, expectedData)
+    raw := RawPacketBytes(expectedPacketType, expectedData)
     if !bytes.Equal(raw, expectedRaw) {
         t.Errorf("Failed: %v != %v", raw, expectedRaw)
     }
 
-    packetType, data, err = ParsePacket(expectedRaw)
+    packetType, data, err = ParseRawPacket(expectedRaw)
     if err != nil {
         t.Errorf("Failed: %v", err)
     }

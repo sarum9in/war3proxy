@@ -1,8 +1,7 @@
 package warcraft
 
 import (
-    "bytes"
-    "encoding/binary"
+    "./io"
     "fmt"
 )
 
@@ -12,8 +11,29 @@ type AnnouncePacket struct {
     Slots uint32
 }
 
-var AnnouncePacketHeader = [...]byte { 0xf7, 0x32, 0x10, 0x00 }
-const AnnouncePacketSize = 16
+var AnnouncePacketType = byte(0x32)
+
+func (announcePacket *AnnouncePacket) PacketType() byte {
+    return AnnouncePacketType
+}
+
+func init() {
+    io.RegisterPacketType(AnnouncePacketType, func() io.Packet {
+        return new(AnnouncePacket)
+    })
+}
+
+func (announce *AnnouncePacket) Bytes() []byte {
+    return io.PacketBytes(announce)
+}
+
+func ParseAnnouncePacket(data []byte) (announce AnnouncePacket, err error) {
+    err = io.ParsePacket(&announce, data)
+    if err != nil {
+        err = fmt.Errorf("Unable to parse announce packet: %v", err)
+    }
+    return
+}
 
 func NewAnnouncePacket(gameId uint32, players uint32, slots uint32) AnnouncePacket {
     return AnnouncePacket{
@@ -21,53 +41,4 @@ func NewAnnouncePacket(gameId uint32, players uint32, slots uint32) AnnouncePack
         Players: players,
         Slots: slots,
     }
-}
-
-func (announce *AnnouncePacket) Bytes() []byte {
-    var buffer bytes.Buffer
-
-    buffer.Write(AnnouncePacketHeader[:])
-    binary.Write(&buffer, binary.LittleEndian, announce.GameId)
-    binary.Write(&buffer, binary.LittleEndian, announce.Players)
-    binary.Write(&buffer, binary.LittleEndian, announce.Slots)
-
-    result := buffer.Bytes()
-    if len(result) != AnnouncePacketSize {
-        panic(fmt.Errorf("len(result) != AnnouncePacketSize"))
-    }
-    return result
-}
-
-func ParseAnnouncePacket(data []byte) (announce AnnouncePacket, err error) {
-    if len(data) != AnnouncePacketSize {
-        err = fmt.Errorf("len(data) != AnnouncePacketSize")
-        return
-    }
-
-    if !bytes.HasPrefix(data, AnnouncePacketHeader[:]) {
-        err = fmt.Errorf("Invalid header")
-        return
-    }
-
-    buffer := bytes.NewBuffer(data[4:])
-
-    err = binary.Read(buffer, binary.LittleEndian, &announce.GameId)
-    if err != nil {
-        err = fmt.Errorf("Unable to parse AnnouncePacket.GameId: %v", err)
-        return
-    }
-
-    err = binary.Read(buffer, binary.LittleEndian, &announce.Players)
-    if err != nil {
-        err = fmt.Errorf("Unable to parse AnnouncePacket.Players: %v", err)
-        return
-    }
-
-    err = binary.Read(buffer, binary.LittleEndian, &announce.Slots)
-    if err != nil {
-        err = fmt.Errorf("Unable to parse AnnouncePacket.Slots: %v", err)
-        return
-    }
-
-    return
 }

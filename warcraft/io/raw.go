@@ -1,4 +1,4 @@
-package warcraft
+package io
 
 import (
     "bytes"
@@ -19,8 +19,8 @@ type Writer interface {
 
 var PacketHeader byte = 0xf7
 
-func ParsePacket(data []byte) (packetType byte, packetData []byte, err error) {
-    packetType, packetData, err = ReadPacket(bytes.NewReader(data))
+func ParseRawPacket(data []byte) (packetType byte, packetData []byte, err error) {
+    packetType, packetData, err = ReadRawPacket(bytes.NewReader(data))
     if err != nil {
         return
     }
@@ -34,10 +34,10 @@ func ParsePacket(data []byte) (packetType byte, packetData []byte, err error) {
     return
 }
 
-func PacketBytes(packetType byte, data []byte) []byte {
+func RawPacketBytes(packetType byte, data []byte) []byte {
     var buffer bytes.Buffer
 
-    err := WritePacket(&buffer, packetType, data)
+    err := WriteRawPacket(&buffer, packetType, data)
     if err != nil {
         panic(err)
     }
@@ -45,7 +45,7 @@ func PacketBytes(packetType byte, data []byte) []byte {
     return buffer.Bytes()
 }
 
-func ReadPacket(reader Reader) (packetType byte, data []byte, err error) {
+func ReadRawPacket(reader Reader) (packetType byte, data []byte, err error) {
     var header [2]byte
     _, err = reader.Read(header[:])
     if err != nil {
@@ -75,7 +75,7 @@ func ReadPacket(reader Reader) (packetType byte, data []byte, err error) {
     return
 }
 
-func WritePacket(writer Writer, packetType byte, data []byte) (err error) {
+func WriteRawPacket(writer Writer, packetType byte, data []byte) (err error) {
     err = writer.WriteByte(PacketHeader)
     if err != nil {
         return
@@ -170,4 +170,3 @@ func WriteNullTerminatedString(writer Writer, data string) (err error) {
 
     return
 }
-

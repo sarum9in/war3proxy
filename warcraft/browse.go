@@ -1,58 +1,39 @@
 package warcraft
 
 import (
-    "bytes"
-    "encoding/binary"
+    "./io"
     "fmt"
 )
 
 type BrowsePacket struct {
     ClientVersion ClientVersion
+    Dummy [4]byte
 }
 
-var BrowsePacketHeader = [...]byte{ 0xf7, 0x2f, 0x10, 0x00 }
-const BrowsePacketSize = 16
+var BrowsePacketType = byte(0x2f)
 
-func NewBrowsePacket(clientVersion ClientVersion) BrowsePacket {
-    return BrowsePacket{ ClientVersion: clientVersion }
+func (browsePacket *BrowsePacket) PacketType() byte {
+    return BrowsePacketType
+}
+
+func init() {
+    io.RegisterPacketType(BrowsePacketType, func() io.Packet {
+        return new(BrowsePacket)
+    })
 }
 
 func (browse *BrowsePacket) Bytes() []byte {
-    var buffer bytes.Buffer
-
-    buffer.Write(BrowsePacketHeader[:])
-    buffer.Write(browse.ClientVersion.Expansion[:])
-    binary.Write(&buffer, binary.LittleEndian, browse.ClientVersion.Version)
-    dummy := [...]byte { 0x00, 0x00, 0x00, 0x00 }
-    buffer.Write(dummy[:])
-
-    result := buffer.Bytes()
-    if len(result) != BrowsePacketSize {
-        panic(fmt.Errorf("len(result) != BrowsePacketSize"))
-    }
-    return result
+    return io.PacketBytes(browse)
 }
 
 func ParseBrowsePacket(data []byte) (browse BrowsePacket, err error) {
-    if len(data) != BrowsePacketSize {
-        err = fmt.Errorf("len(data) != BrowsePacketSize")
-        return
-    }
-
-    if !bytes.HasPrefix(data, BrowsePacketHeader[:]) {
-        err = fmt.Errorf("Invalid header")
-        return
-    }
-
-    copy(browse.ClientVersion.Expansion[:], data[4:8])
-
-    err = binary.Read(bytes.NewBuffer(data[8:]), binary.LittleEndian, &browse.ClientVersion.Version)
+    err = io.ParsePacket(&browse, data)
     if err != nil {
-        err = fmt.Errorf("Unable to parse ClientVersion.Expansion: %v", err)
-        return
+        err = fmt.Errorf("Unable to parse browse packet: %v", err)
     }
-
-    // ignore unknown 4-byte dummy
-
     return
+}
+
+func NewBrowsePacket(clientVersion ClientVersion) BrowsePacket {
+    return BrowsePacket{ ClientVersion: clientVersion }
 }
