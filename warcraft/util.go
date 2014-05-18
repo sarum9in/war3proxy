@@ -2,8 +2,6 @@ package warcraft
 
 import (
     "bytes"
-    "fmt"
-    "io"
 )
 
 func ReadIntegerRequired(reader Reader, integer interface{}) {
@@ -30,37 +28,15 @@ func WriteNullTerminatedStringRequired(writer Writer, data string) {
 }
 
 func ReadNullTerminatedBytesRequired(reader Reader) []byte {
-    var buffer bytes.Buffer
-
-    var err error
-
-    for c, err := reader.ReadByte(); err == nil; c, err = reader.ReadByte() {
-        if c == 0 {
-            break
-        } else {
-            buffer.WriteByte(byte(c))
-        }
-    }
-    if err != nil && err != io.EOF {
-        panic(err)
-    }
-
-    return buffer.Bytes()
-}
-
-func WriteNullTerminatedBytesRequired(writer Writer, data []byte) {
-    for _, c := range data {
-        if c == 0 {
-            panic(fmt.Errorf("Invalid data with null character"))
-        }
-    }
-
-    _, err := writer.Write(data)
+    data, err := ReadNullTerminatedBytes(reader)
     if err != nil {
         panic(err)
     }
+    return data
+}
 
-    err = writer.WriteByte(0)
+func WriteNullTerminatedBytesRequired(writer Writer, data []byte) {
+    err := WriteNullTerminatedBytes(writer, data)
     if err != nil {
         panic(err)
     }

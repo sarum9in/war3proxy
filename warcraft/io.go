@@ -111,3 +111,42 @@ func ReadInteger(reader Reader, integer interface{}) error {
 func WriteInteger(writer Writer, integer interface{}) error {
     return binary.Write(writer, binary.LittleEndian, integer)
 }
+
+func ReadNullTerminatedBytes(reader Reader) (data []byte, err error) {
+    var buffer bytes.Buffer
+
+    for c, err := reader.ReadByte(); err == nil; c, err = reader.ReadByte() {
+        if c == 0 {
+            break
+        } else {
+            buffer.WriteByte(byte(c))
+        }
+    }
+    if err != nil && err != io.EOF {
+        return
+    }
+
+    data = buffer.Bytes()
+
+    return
+}
+
+func WriteNullTerminatedBytes(writer Writer, data []byte) (err error) {
+    for _, c := range data {
+        if c == 0 {
+            panic(fmt.Errorf("Invalid data with null character"))
+        }
+    }
+
+    _, err = writer.Write(data)
+    if err != nil {
+        return
+    }
+
+    err = writer.WriteByte(0)
+    if err != nil {
+        return
+    }
+
+    return
+}

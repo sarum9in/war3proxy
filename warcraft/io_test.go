@@ -44,3 +44,42 @@ func TestPacket(t *testing.T) {
         t.Errorf("Failed: %v != %v", data, expectedData)
     }
 }
+
+func TestInteger(t *testing.T) {
+    var buffer bytes.Buffer
+
+    var integer uint32 = 10
+    err := WriteInteger(&buffer, integer)
+    if err != nil {
+        t.Errorf("Failed: %v", err)
+    }
+
+    var integer2 uint32
+    err = ReadInteger(&buffer, &integer2)
+    if err != nil {
+        t.Errorf("Failed: %v", err)
+    }
+    if integer2 != integer {
+        t.Errorf("Failed: %d != %d", integer2, integer)
+    }
+}
+
+func TestNullTerminated(t *testing.T) {
+    var buffer bytes.Buffer
+
+    err := WriteNullTerminatedBytes(&buffer, []byte {1, 2, 3, 4, 5})
+    if err != nil {
+        t.Errorf("Failed: %v", err)
+    }
+    if !bytes.Equal(buffer.Bytes(), []byte {1, 2, 3, 4, 5, 0}) {
+        t.Errorf("Failed write")
+    }
+
+    data, err := ReadNullTerminatedBytes(&buffer)
+    if err != nil {
+        t.Errorf("Failed: %v", err)
+    }
+    if !bytes.Equal(data, []byte {1, 2, 3, 4, 5}) {
+        t.Errorf("Failed read")
+    }
+}
