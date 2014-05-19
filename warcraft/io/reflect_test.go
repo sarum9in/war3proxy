@@ -14,19 +14,19 @@ func TestReflect(t *testing.T) {
     type MyStruct struct {
         Ten uint32
         Dummy [5]byte
-        Nested MyNestedStruct
+        Nested MyNestedStruct `encoding:"nested"`
         Hello string
         World string
     }
 
     expectedPacketData := []byte {
-        10, 0, 0, 0,
-        1, 2, 3, 4, 5,
-            159, 115, 111, 109, 101, 117, 105, 105,
-            21, 111, 103, 1, 5, 1, 1, 1,
-            0,
-        104, 101, 108, 108, 111, 0,
-        119, 111, 114, 108, 100, 0,
+        0x0a, 0x00, 0x00, 0x00,
+        0x01, 0x02, 0x03, 0x04, 0x05,
+            0x9f, 0x73, 0x6f, 0x6d, 0x65, 0x75, 0x69, 0x69,
+            0x15, 0x6f, 0x67, 0x01, 0x05, 0x01, 0x01, 0x01,
+            0x00,
+        0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x0,
+        0x77, 0x6f, 0x72, 0x6c, 0x64, 0x0,
     }
     expectedDummy := []byte { 1, 2, 3, 4, 5 }
 
