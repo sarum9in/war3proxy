@@ -104,6 +104,12 @@ func defaultWriteTo(writer Writer, r reflect.Value) (err error) {
             return
         }
     case reflect.Array: // we use only byte arrays
+        if !r.CanAddr() {
+            copy := reflect.New(r.Type())
+            copy = copy.Elem()
+            reflect.Copy(copy, r)
+            r = copy
+        }
         _, err = writer.Write(r.Slice(0, r.Len()).Bytes())
         if err != nil {
             return err

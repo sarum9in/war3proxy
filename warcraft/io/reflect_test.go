@@ -58,7 +58,7 @@ func TestReflect(t *testing.T) {
 
     var writer bytes.Buffer
 
-    err = ReflectWrite(&writer, data)
+    err = ReflectWrite(&writer, *data)
     if err != nil {
         t.Errorf("Failed: %v", err)
     }
