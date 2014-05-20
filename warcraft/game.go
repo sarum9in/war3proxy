@@ -6,7 +6,7 @@ import (
 )
 
 type MapInfo struct {
-    Dummy [0x14]byte
+    Dummy [0x0d]byte
     Path string
     HostName string
 }
@@ -16,9 +16,10 @@ type GameInfoPacket struct {
     Id uint32
     EntryKey uint32
     Name string
-    MapInfo MapInfo `encode:"nested"`
+    Dummy [0x01]byte
+    MapInfo MapInfo `encoding:"nested"`
     Slots uint32
-    gameType [4]byte
+    GameType [4]byte
     CurrentPlayers uint32
     PlayerSlots uint32
     UpTime uint32
