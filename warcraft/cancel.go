@@ -1,9 +1,6 @@
 package warcraft
 
-import (
-    "./io"
-    "fmt"
-)
+import "./io"
 
 type CancelPacket struct {
     GameId uint32
@@ -28,7 +25,10 @@ func (cancel *CancelPacket) Bytes() []byte {
 func (cancel *CancelPacket) Parse(data []byte) (err error) {
     err = io.ParsePacket(cancel, data)
     if err != nil {
-        err = fmt.Errorf("Unable to parse cancel packet: %v", err)
+        err = &ParseError{
+            Name: "cancel packet",
+            Err:  err,
+        }
     }
     return
 }

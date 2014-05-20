@@ -1,13 +1,10 @@
 package warcraft
 
-import (
-    "./io"
-    "fmt"
-)
+import "./io"
 
 type BrowsePacket struct {
     ClientVersion ClientVersion
-    Dummy [4]byte
+    Dummy         [4]byte
 }
 
 var BrowsePacketType = byte(0x2f)
@@ -29,7 +26,10 @@ func (browse *BrowsePacket) Bytes() []byte {
 func (browse *BrowsePacket) Parse(data []byte) (err error) {
     err = io.ParsePacket(browse, data)
     if err != nil {
-        err = fmt.Errorf("Unable to parse browse packet: %v", err)
+        err = &ParseError{
+            Name: "browse packet",
+            Err:  err,
+        }
     }
     return
 }
@@ -40,5 +40,5 @@ func ParseBrowsePacket(data []byte) (browse BrowsePacket, err error) {
 }
 
 func NewBrowsePacket(clientVersion ClientVersion) BrowsePacket {
-    return BrowsePacket{ ClientVersion: clientVersion }
+    return BrowsePacket{ClientVersion: clientVersion}
 }

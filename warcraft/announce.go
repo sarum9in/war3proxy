@@ -1,14 +1,11 @@
 package warcraft
 
-import (
-    "./io"
-    "fmt"
-)
+import "./io"
 
 type AnnouncePacket struct {
-    GameId uint32
+    GameId  uint32
     Players uint32
-    Slots uint32
+    Slots   uint32
 }
 
 var AnnouncePacketType = byte(0x32)
@@ -30,7 +27,10 @@ func (announce *AnnouncePacket) Bytes() []byte {
 func (announce *AnnouncePacket) Parse(data []byte) (err error) {
     err = io.ParsePacket(announce, data)
     if err != nil {
-        err = fmt.Errorf("Unable to parse announce packet: %v", err)
+        err = &ParseError{
+            Name: "announce packet",
+            Err:  err,
+        }
     }
     return
 }
@@ -42,8 +42,8 @@ func ParseAnnouncePacket(data []byte) (announce AnnouncePacket, err error) {
 
 func NewAnnouncePacket(gameId uint32, players uint32, slots uint32) AnnouncePacket {
     return AnnouncePacket{
-        GameId: gameId,
+        GameId:  gameId,
         Players: players,
-        Slots: slots,
+        Slots:   slots,
     }
 }

@@ -3,7 +3,6 @@ package io
 import (
     "bytes"
     "encoding/binary"
-    "fmt"
     "io"
 )
 
@@ -25,9 +24,12 @@ func ParseRawPacket(data []byte) (packetType byte, packetData []byte, err error)
         return
     }
 
-    expectedPacketDataSize := len(data) - 2 - 2
-    if len(packetData) != expectedPacketDataSize {
-        err = fmt.Errorf("Invalid packet's data size: %d != %d", len(packetData), expectedPacketDataSize)
+    declaredPacketSize := len(packetData) + 2 + 2 // + header + size
+    if len(data) != declaredPacketSize {
+        err = &InvalidPacketDataSizeError{
+            ActualSize:   len(data),
+            DeclaredSize: declaredPacketSize,
+        }
         return
     }
 
@@ -53,7 +55,10 @@ func ReadRawPacket(reader Reader) (packetType byte, data []byte, err error) {
     }
 
     if header[0] != PacketHeader {
-        err = fmt.Errorf("Invalid header")
+        err = &InvalidPacketHeaderError{
+            Header:         header[0],
+            ExpectedHeader: PacketHeader,
+        }
         return
     }
 
@@ -86,10 +91,13 @@ func WriteRawPacket(writer Writer, packetType byte, data []byte) (err error) {
         return
     }
 
-    realSize := 2 + 2 + len(data) // header + size + data
-    var size uint16 = uint16(realSize)
-    if int(size) != realSize {
-        err = fmt.Errorf("Too big packet: size = %d", realSize)
+    actualSize := 2 + 2 + len(data) // header + size + data
+    var size uint16 = uint16(actualSize)
+    if int(size) != actualSize {
+        err = &UnexpectedBigPacket{
+            Size: actualSize,
+        }
+        return
     }
     err = WriteInteger(writer, size)
     if err != nil {
@@ -132,9 +140,12 @@ func ReadNullTerminatedBytes(reader Reader) (data []byte, err error) {
 }
 
 func WriteNullTerminatedBytes(writer Writer, data []byte) (err error) {
-    for _, c := range data {
+    for pos, c := range data {
         if c == 0 {
-            panic(fmt.Errorf("Invalid data with null character"))
+            panic(&UnexpectedNullByteError{
+                Data: data,
+                Pos:  pos,
+            })
         }
     }
 

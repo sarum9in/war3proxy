@@ -1,35 +1,15 @@
 package io
 
-import (
-    "fmt"
-    "reflect"
-)
+import "reflect"
 
 func ReflectRead(reader Reader, v interface{}) error {
     return reflectRead(reader, reflect.ValueOf(v))
 }
 
-func reflectRead(reader Reader, r reflect.Value) error {
-    if readFrom := r.MethodByName("ReadFrom"); readFrom.IsValid() {
-        ret := readFrom.Call([]reflect.Value{reflect.ValueOf(reader)})
-        if len(ret) != 1 {
-            panic(fmt.Errorf("Invalid number of return values from ReadFrom(), should be 1"))
-        }
-        switch x := ret[0].Interface().(type) {
-        case error:
-            return x
-        default:
-            panic(fmt.Errorf("Invalid return value from ReadFrom(), should be error"))
-        }
-    } else {
-        return defaultReadFrom(reader, r)
-    }
-}
-
-func defaultReadFrom(reader Reader, r reflect.Value) (err error) {
+func reflectRead(reader Reader, r reflect.Value) (err error) {
     switch r.Kind() {
     case reflect.Ptr:
-        err = defaultReadFrom(reader, r.Elem())
+        err = reflectRead(reader, r.Elem())
         return
     case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
         reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
@@ -50,7 +30,7 @@ func defaultReadFrom(reader Reader, r reflect.Value) (err error) {
             }
         } else {
             for i := 0; i < r.Len(); i++ {
-                err = defaultReadFrom(reader, r.Index(i))
+                err = reflectRead(reader, r.Index(i))
                 if err != nil {
                     return err
                 }
@@ -83,27 +63,10 @@ func ReflectWrite(writer Writer, v interface{}) error {
     return reflectWrite(writer, reflect.ValueOf(v))
 }
 
-func reflectWrite(writer Writer, r reflect.Value) error {
-    if writeTo := r.MethodByName("WriteTo"); writeTo.IsValid() {
-        ret := writeTo.Call([]reflect.Value{reflect.ValueOf(writer)})
-        if len(ret) != 1 {
-            panic(fmt.Errorf("Invalid number of return values from ReadFrom(), should be 1"))
-        }
-        switch x := ret[0].Interface().(type) {
-        case error:
-            return x
-        default:
-            panic(fmt.Errorf("Invalid return value from ReadFrom(), should be error"))
-        }
-    } else {
-        return defaultWriteTo(writer, r)
-    }
-}
-
-func defaultWriteTo(writer Writer, r reflect.Value) (err error) {
+func reflectWrite(writer Writer, r reflect.Value) (err error) {
     switch r.Kind() {
     case reflect.Ptr:
-        return defaultWriteTo(writer, r.Elem())
+        return reflectWrite(writer, r.Elem())
     case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
         reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
         return WriteInteger(writer, r.Interface())
@@ -115,7 +78,7 @@ func defaultWriteTo(writer Writer, r reflect.Value) (err error) {
     case reflect.Array:
         // not addressable, Slice() should not be used
         for i := 0; i < r.Len(); i++ {
-            err = defaultWriteTo(writer, r.Index(i))
+            err = reflectWrite(writer, r.Index(i))
             if err != nil {
                 return err
             }

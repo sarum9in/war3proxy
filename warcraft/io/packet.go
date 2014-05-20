@@ -1,9 +1,6 @@
 package io
 
-import (
-    "bytes"
-    "fmt"
-)
+import "bytes"
 
 type Packet interface {
     PacketType() byte
@@ -20,7 +17,9 @@ func RegisterPacketType(packetType byte, packetInit PacketInit) {
 func NewPacket(packetType byte) (packet Packet, err error) {
     packetInit, ok := packetTypeMap[packetType]
     if !ok {
-        err = fmt.Errorf("Unable to create packet with unknown type = %x", packetType)
+        err = &UnregisteredPacketTypeError{
+            PacketType: packetType,
+        }
         return
     }
 
@@ -57,7 +56,10 @@ func PacketReadFrom(packet Packet, reader Reader) (err error) {
         return
     }
     if packetType != packet.PacketType() {
-        err = fmt.Errorf("Wrong packet type %x != %x", packetType, packet.PacketType())
+        err = &UnexpectedPacketTypeError{
+            PacketType:         packetType,
+            ExpectedPacketType: packet.PacketType(),
+        }
         return
     }
 

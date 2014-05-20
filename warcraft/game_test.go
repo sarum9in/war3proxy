@@ -1,8 +1,8 @@
 package warcraft
 
 import (
-    "bytes"
     "./io"
+    "bytes"
     "testing"
 )
 
@@ -10,29 +10,29 @@ func TestGameInfoPacket(t *testing.T) {
     expectedGameInfo := GameInfoPacket{
         ClientVersion: ClientVersion{
             Expansion: TftExpansion,
-            Version: 22,
+            Version:   22,
         },
-        Id: 10,
+        Id:       10,
         EntryKey: 152,
-        Name: "game name",
-        Dummy: [0x01]byte { 0x07 },
+        Name:     "game name",
+        Dummy:    [0x01]byte{0x07},
         MapInfo: MapInfo{
-            Dummy: [0x0d]byte {
+            Dummy: [0x0d]byte{
                 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
                 0x09, 0x0a, 0x0b, 0x0c, 0x0d,
             },
-            Path: "some/path",
+            Path:     "some/path",
             HostName: "host name",
         },
-        Slots: 10,
-        GameType: [0x4]byte { 0x01, 0x02, 0x03, 0x04 },
+        Slots:          10,
+        GameType:       [0x4]byte{0x01, 0x02, 0x03, 0x04},
         CurrentPlayers: 4,
-        PlayerSlots: 6,
-        UpTime: 20,
-        Port: 6112,
+        PlayerSlots:    6,
+        UpTime:         20,
+        Port:           6112,
     }
 
-    expectedGameInfoData := []byte {
+    expectedGameInfoData := []byte{
         0xf7, 0x30, 0x5c, 0x00, // header
         0x50, 0x58, 0x33, 0x57, 0x16, 0x00, 0x00, 0x00, // ClientVersion
         0x0a, 0x00, 0x00, 0x00, // Id
@@ -56,7 +56,7 @@ func TestGameInfoPacket(t *testing.T) {
         0xe0, 0x17, // Port
     }
 
-    expectedMapInfoData := []byte {
+    expectedMapInfoData := []byte{
         // Dummy
         0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
         0x09, 0x0a, 0x0b, 0x0c, 0x0d,
