@@ -6,8 +6,8 @@ import (
     "testing"
 )
 
-func TestCode(t *testing.T) {
-    tests := [...]string {
+func TestNested(t *testing.T) {
+    tests := [...]string{
         "",
         "0",
         "01",
@@ -34,41 +34,41 @@ func TestCode(t *testing.T) {
     }
     for _, s := range tests {
         bs := []byte(s)
-        ebs := EncodeBytes(bs)
-        if ebs[len(ebs) - 1] != 0 {
-            t.Errorf("Failed: last byte %d != %d", ebs[len(ebs) - 1], 0)
+        ebs := EncodeNestedBytes(bs)
+        if ebs[len(ebs)-1] != 0 {
+            t.Errorf("Failed: last byte %d != %d", ebs[len(ebs)-1], 0)
         }
-        debs := DecodeBytes(ebs)
+        debs := DecodeNestedBytes(ebs)
         sdebs := string(debs)
         if sdebs != s {
             t.Errorf("Failed: %q != %q", sdebs, s)
         }
     }
 
-    expectedData := []byte {
+    expectedData := []byte{
         1, 2, 3, 4, 0, 5, 6,
         7, 8, 0, 9, 10, 11, 12,
         0, 13, 14,
     }
-    expectedCoded := []byte {
+    expectedEncoded := []byte{
         75, 1, 3, 3, 5, 1, 5, 7,
         83, 7, 9, 1, 9, 11, 11, 13,
         5, 1, 13, 15,
         0,
     }
     var buffer bytes.Buffer
-    writer := NewCodeWriter(&buffer)
+    writer := NewNestedWriter(&buffer)
     _, err := writer.Write(expectedData)
     writer.Close()
     if err != nil {
         t.Errorf("Failed: %v", err)
     }
-    if !bytes.Equal(buffer.Bytes(), expectedCoded) {
-        t.Errorf("Failed: %v != %v", buffer.Bytes(), expectedCoded)
+    if !bytes.Equal(buffer.Bytes(), expectedEncoded) {
+        t.Errorf("Failed: %v != %v", buffer.Bytes(), expectedEncoded)
     }
 
     data := make([]byte, 4096)
-    reader := NewCodeReader(&buffer)
+    reader := NewNestedReader(&buffer)
     n, err := reader.Read(data)
     data = data[:n]
     if err != nil && err != io.EOF {

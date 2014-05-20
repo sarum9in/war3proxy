@@ -11,7 +11,7 @@ func ReflectRead(reader Reader, v interface{}) error {
 
 func reflectRead(reader Reader, r reflect.Value) error {
     if readFrom := r.MethodByName("ReadFrom"); readFrom.IsValid() {
-        ret := readFrom.Call([]reflect.Value { reflect.ValueOf(reader) })
+        ret := readFrom.Call([]reflect.Value{reflect.ValueOf(reader)})
         if len(ret) != 1 {
             panic(fmt.Errorf("Invalid number of return values from ReadFrom(), should be 1"))
         }
@@ -32,7 +32,7 @@ func defaultReadFrom(reader Reader, r reflect.Value) (err error) {
         err = defaultReadFrom(reader, r.Elem())
         return
     case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-         reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+        reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
         err = ReadInteger(reader, r.Addr().Interface())
         return
     case reflect.String:
@@ -61,12 +61,12 @@ func defaultReadFrom(reader Reader, r reflect.Value) (err error) {
             field := r.Field(i)
             switch r.Type().Field(i).Tag.Get("encoding") {
             case "nested":
-                codeReader := NewCodeReader(reader)
-                err = reflectRead(codeReader, field)
+                nestedReader := NewNestedReader(reader)
+                err = reflectRead(nestedReader, field)
                 if err != nil {
                     return
                 }
-                _, err = codeReader.SkipAll()
+                _, err = nestedReader.SkipAll()
             default:
                 err = reflectRead(reader, field)
             }
@@ -85,7 +85,7 @@ func ReflectWrite(writer Writer, v interface{}) error {
 
 func reflectWrite(writer Writer, r reflect.Value) error {
     if writeTo := r.MethodByName("WriteTo"); writeTo.IsValid() {
-        ret := writeTo.Call([]reflect.Value { reflect.ValueOf(writer) })
+        ret := writeTo.Call([]reflect.Value{reflect.ValueOf(writer)})
         if len(ret) != 1 {
             panic(fmt.Errorf("Invalid number of return values from ReadFrom(), should be 1"))
         }
@@ -105,7 +105,7 @@ func defaultWriteTo(writer Writer, r reflect.Value) (err error) {
     case reflect.Ptr:
         return defaultWriteTo(writer, r.Elem())
     case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-         reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+        reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
         return WriteInteger(writer, r.Interface())
     case reflect.String:
         err = WriteNullTerminatedString(writer, r.String())
@@ -125,12 +125,12 @@ func defaultWriteTo(writer Writer, r reflect.Value) (err error) {
             field := r.Field(i)
             switch r.Type().Field(i).Tag.Get("encoding") {
             case "nested":
-                codeWriter := NewCodeWriter(writer)
-                err = reflectWrite(codeWriter, field)
+                nestedWriter := NewNestedWriter(writer)
+                err = reflectWrite(nestedWriter, field)
                 if err != nil {
                     return
                 }
-                err = codeWriter.Close()
+                err = nestedWriter.Close()
             default:
                 err = reflectWrite(writer, field)
             }
