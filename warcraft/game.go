@@ -42,11 +42,16 @@ func (gameInfo *GameInfoPacket) Bytes() []byte {
     return io.PacketBytes(gameInfo)
 }
 
-func ParseGameInfoPacket(data []byte) (gameInfo GameInfoPacket, err error) {
-    err = io.ParsePacket(&gameInfo, data)
+func (gameInfo *GameInfoPacket) Parse(data []byte) (err error) {
+    err = io.ParsePacket(gameInfo, data)
     if err != nil {
         err = fmt.Errorf("Unable to parse game info packet: %v", err)
     }
+    return
+}
+
+func ParseGameInfoPacket(data []byte) (gameInfo GameInfoPacket, err error) {
+    err = gameInfo.Parse(data)
     return
 }
 

@@ -27,11 +27,16 @@ func (announce *AnnouncePacket) Bytes() []byte {
     return io.PacketBytes(announce)
 }
 
-func ParseAnnouncePacket(data []byte) (announce AnnouncePacket, err error) {
-    err = io.ParsePacket(&announce, data)
+func (announce *AnnouncePacket) Parse(data []byte) (err error) {
+    err = io.ParsePacket(announce, data)
     if err != nil {
         err = fmt.Errorf("Unable to parse announce packet: %v", err)
     }
+    return
+}
+
+func ParseAnnouncePacket(data []byte) (announce AnnouncePacket, err error) {
+    err = announce.Parse(data)
     return
 }
 

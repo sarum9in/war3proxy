@@ -26,11 +26,16 @@ func (browse *BrowsePacket) Bytes() []byte {
     return io.PacketBytes(browse)
 }
 
-func ParseBrowsePacket(data []byte) (browse BrowsePacket, err error) {
-    err = io.ParsePacket(&browse, data)
+func (browse *BrowsePacket) Parse(data []byte) (err error) {
+    err = io.ParsePacket(browse, data)
     if err != nil {
         err = fmt.Errorf("Unable to parse browse packet: %v", err)
     }
+    return
+}
+
+func ParseBrowsePacket(data []byte) (browse BrowsePacket, err error) {
+    err = browse.Parse(data)
     return
 }
 

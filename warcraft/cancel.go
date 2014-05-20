@@ -25,11 +25,16 @@ func (cancel *CancelPacket) Bytes() []byte {
     return io.PacketBytes(cancel)
 }
 
-func ParseCancelPacket(data []byte) (cancel CancelPacket, err error) {
-    err = io.ParsePacket(&cancel, data)
+func (cancel *CancelPacket) Parse(data []byte) (err error) {
+    err = io.ParsePacket(cancel, data)
     if err != nil {
         err = fmt.Errorf("Unable to parse cancel packet: %v", err)
     }
+    return
+}
+
+func ParseCancelPacket(data []byte) (cancel CancelPacket, err error) {
+    err = cancel.Parse(data)
     return
 }
 
