@@ -42,10 +42,19 @@ func defaultReadFrom(reader Reader, r reflect.Value) (err error) {
             return
         }
         r.SetString(str)
-    case reflect.Array: // we use only byte arrays
-        _, err = reader.Read(r.Slice(0, r.Len()).Bytes())
-        if err != nil {
-            return
+    case reflect.Array:
+        if r.Type().Elem().Kind() == reflect.Uint8 {
+            _, err = reader.Read(r.Slice(0, r.Len()).Bytes())
+            if err != nil {
+                return
+            }
+        } else {
+            for i := 0; i < r.Len(); i++ {
+                err = defaultReadFrom(reader, r.Index(i))
+                if err != nil {
+                    return err
+                }
+            }
         }
     default:
         for i := 0; i < r.NumField(); i++ {
@@ -103,16 +112,13 @@ func defaultWriteTo(writer Writer, r reflect.Value) (err error) {
         if err != nil {
             return
         }
-    case reflect.Array: // we use only byte arrays
-        if !r.CanAddr() {
-            copy := reflect.New(r.Type())
-            copy = copy.Elem()
-            reflect.Copy(copy, r)
-            r = copy
-        }
-        _, err = writer.Write(r.Slice(0, r.Len()).Bytes())
-        if err != nil {
-            return err
+    case reflect.Array:
+        // not addressable, Slice() should not be used
+        for i := 0; i < r.Len(); i++ {
+            err = defaultWriteTo(writer, r.Index(i))
+            if err != nil {
+                return err
+            }
         }
     default:
         for i := 0; i < r.NumField(); i++ {
